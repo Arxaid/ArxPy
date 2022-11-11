@@ -197,7 +197,7 @@ def TTest(datasheet1, datasheet2, alpha=0.05, show=True):
 
     return tValue
 
-def MannWhitneyTest(datasheet1, datasheet2, show=True):
+def MannWhitneyTest(datasheet1, datasheet2, alpha=0.05, show=True):
     # Mann-Whitney non-parametric U-test
     debug = False
 
@@ -255,9 +255,9 @@ def MannWhitneyTest(datasheet1, datasheet2, show=True):
     
     mU = (len(datasheet1) * len(datasheet2))/2
     sigmaU = sqrt((len(datasheet1) * len(datasheet2) * (len(datasheet1) + len(datasheet2) + 1))/12)
-    Zvalue = (Uvalue - mU)/sigmaU
+    Zvalue = abs((Uvalue - mU)/sigmaU)
 
-    pValue = 1 - st.norm.sf(abs(Zvalue))
+    pValue = st.norm.sf(abs(Zvalue))
 
     if show == True:
         print('Rank sum, first group:           ', rankSum1)
@@ -265,3 +265,7 @@ def MannWhitneyTest(datasheet1, datasheet2, show=True):
         print('U value:                         ', Uvalue)
         print('Z value, unadjusted:             ', Zvalue)
         print('p-value, unadjusted:             ', pValue)
+        if (pValue < alpha):
+            print('H0 accepted')
+        else:
+            print('H0 rejected')
