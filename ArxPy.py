@@ -2,6 +2,7 @@
 #
 # Copyright (c) 2022 Vladislav Sosedov.
 
+from re import U
 import numpy as np
 import pandas as pd
 import scipy.stats as st
@@ -186,7 +187,6 @@ def TTest(datasheet1, datasheet2, alpha=0.05, show=True):
     tValueSepar = (mx1 - mx2)/(sqrt((dx1/len(datasheet1)) + (dx2/len(datasheet2))))
     dofSepar = ((dx1/len(datasheet1) + dx2/len(datasheet2))**2)/(((dx1/len(datasheet1))**2)/(len(datasheet1) - 1) + ((dx2/len(datasheet2))**2)/(len(datasheet2) - 1))
 
-
     if show == True:
         print('Mean Group 1:                    ',mx1)
         print('Mean Group 2:                    ',mx2)
@@ -196,3 +196,72 @@ def TTest(datasheet1, datasheet2, alpha=0.05, show=True):
         print('Degrees of freedom:              ',dofSepar)
 
     return tValue
+
+def MannWhitneyTest(datasheet1, datasheet2, show=True):
+    # Mann-Whitney non-parametric U-test
+    debug = False
+
+    # Grouping and sorting data
+    datasheet = [datasheet1, datasheet2]
+    datasheetGrouped = []
+    for counter1 in range(len(datasheet)):
+        for counter2 in range(len(datasheet[counter1])):
+            datasheetGrouped.append([datasheet[counter1][counter2], counter1])
+    datasheetGrouped.sort()
+    
+    if debug == True:
+        print('Grouped and sorted data from datasheets:')
+        print(datasheetGrouped)
+
+    # Ranking sorted data
+    rank = 1
+    rankings = {}
+    for counter in range(len(datasheetGrouped)):
+        datasheetGrouped[counter].append(rank)
+        rank += 1
+    for counter in range(len(datasheetGrouped)):
+        if datasheetGrouped[counter][0] not in rankings:
+            rankings[datasheetGrouped[counter][0]] = [datasheetGrouped[counter][2]]
+        else:
+            rankings[datasheetGrouped[counter][0]].append(datasheetGrouped[counter][2])
+    
+    if debug == True:
+        print('Duplicate values and their ranks:')
+        print(rankings)
+
+    for counter in range(len(datasheetGrouped)):
+        if len(rankings[datasheetGrouped[counter][0]]) > 1:
+            datasheetGrouped[counter][2] = sum(rankings[datasheetGrouped[counter][0]])/len(rankings[datasheetGrouped[counter][0]])
+    
+    if debug == True:
+        print('Ranked data adjusted w/ duplicate values:')
+        print(datasheetGrouped)
+
+    # Splitting ranked data and calculating rank sums
+    rankSum1 = 0
+    rankSum2 = 0
+    for counter in range(len(datasheetGrouped)):
+        if datasheetGrouped[counter][1] == 0:
+            rankSum1 += datasheetGrouped[counter][2]
+        if datasheetGrouped[counter][1] == 1:
+            rankSum2 += datasheetGrouped[counter][2]
+
+    # Calculating U, Z values
+    # U1 = len(datasheet1) * len(datasheet2) + (len(datasheet1) * (len(datasheet1) + 1))/2 - rankSum1
+    # U2 = len(datasheet1) * len(datasheet2) + (len(datasheet2) * (len(datasheet2) + 1))/2 - rankSum2
+    U1 = rankSum1 - (len(datasheet1) * (len(datasheet1) + 1))/2
+    U2 = rankSum2 - (len(datasheet2) * (len(datasheet2) + 1))/2
+    Uvalue = min(U1, U2)
+    
+    mU = (len(datasheet1) * len(datasheet2))/2
+    sigmaU = sqrt((len(datasheet1) * len(datasheet2) * (len(datasheet1) + len(datasheet2) + 1))/12)
+    Zvalue = (Uvalue - mU)/sigmaU
+
+    pValue = 1 - st.norm.sf(abs(Zvalue))
+
+    if show == True:
+        print('Rank sum, first group:           ', rankSum1)
+        print('Rank sum, second group:          ', rankSum2)
+        print('U value:                         ', Uvalue)
+        print('Z value, unadjusted:             ', Zvalue)
+        print('p-value, unadjusted:             ', pValue)
