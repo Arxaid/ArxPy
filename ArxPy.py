@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as st
 
-from math import sqrt, erf, exp
+from math import sqrt, erf, exp, pi
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -51,9 +51,13 @@ def DatasheetSigma(dx):
 def Expo(datasheet):
     # Exponential distribution pdf
     expo_pdf = []
+    lambdaValue = 1
     mx = DatasheetMathExp(datasheet=datasheet)
     for x in datasheet:
-        expo_pdf.append(1 - exp(-(1/mx) * x))
+        if (x < 0):
+            expo_pdf.append(0)
+        if (x >= 0):
+            expo_pdf.append(lambdaValue - exp(-(lambdaValue/mx) * x)) 
     return expo_pdf
 
 def Norm(datasheet):
@@ -135,6 +139,28 @@ def KSTest(datasheet, mx, dx, dist='norm', alpha=0.05, show=True):
 
     return dValue, currentLambda
 
+def ChiSquareTest(datasheet, mx, dx, dist='norm', show=True):
+    # Pirson's Chi Squared statistics test
+    chi2Value = 0
+    distReal = []
+    
+    if dist == 'norm':
+        distTheoretical = Norm(datasheet)
+        for counter in range(0, len(datasheet)):
+            distReal.append(1/(sqrt(2 * pi) * dx) * exp(-0.5 * ((datasheet[counter] - mx)**2))/(2 * dx))
+    if dist == 'expo':
+        distTheoretical = Expo(datasheet)
+        for counter in range(0, len(datasheet)):
+            distReal.append(exp(-(1/mx) * datasheet[counter]))
+    
+    for counter in range(0, len(datasheet)):
+        chi2Value += (((distTheoretical[counter] - distReal[counter])**2)/distTheoretical[counter])
+
+    if show == True:
+        print('Chi-Squared statistics:   ',            chi2Value)
+
+    return chi2Value
+
 def TTest(datasheet1, datasheet2, alpha=0.05, show=True):
     # Student t-test
     critLambda = KSCritical(alpha=alpha)
@@ -152,7 +178,7 @@ def TTest(datasheet1, datasheet2, alpha=0.05, show=True):
     if Lambda > critLambda:
         print('Second datasheet doesnt follow normal distribution')
         exit(-1)
-    
+
     S = (dx1 * (len(datasheet1) - 1) + dx2 * (len(datasheet2) - 1))/(len(datasheet1) + len(datasheet2) - 2)
     tValue = (mx1 - mx2)/(sqrt(S * (1/len(datasheet1) + 1/len(datasheet2))))
     dof = len(datasheet1) + len(datasheet2) - 2
