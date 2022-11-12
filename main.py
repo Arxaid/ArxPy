@@ -1,6 +1,7 @@
 # This file is part of ArxPy statistics library.
 #
 # Copyright (c) 2022 Vladislav Sosedov.
+# Licensed under the Apache License, Version 2.0
 
 import ArxPy as arx
 
