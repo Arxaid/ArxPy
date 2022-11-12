@@ -265,7 +265,7 @@ def MannWhitneyTest(datasheet1, datasheet2, alpha=0.05, show=True):
         print('U value:                         ', Uvalue)
         print('Z value, unadjusted:             ', Zvalue)
         print('p-value, unadjusted:             ', pValue)
-        if (pValue < alpha):
+        if (pValue <= alpha):
             print('H0 accepted')
         else:
             print('H0 rejected')
