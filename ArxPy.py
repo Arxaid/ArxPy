@@ -2,7 +2,6 @@
 #
 # Copyright (c) 2022 Vladislav Sosedov.
 
-from re import U
 import numpy as np
 import pandas as pd
 import scipy.stats as st
